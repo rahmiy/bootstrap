@@ -40,7 +40,6 @@ class FormValidation extends BaseComponent {
     this._config = this._getConfig(config)
 
     this._addEventListeners()
-    this._formElements = [...this._element.elements] // the DOM elements
     this._formFields = null // Our fields
   }
 
@@ -62,7 +61,7 @@ class FormValidation extends BaseComponent {
 
   appendErrors() {
     this.getFields().forEach(field => {
-      field.appendFirstErrorMsg()
+      field.errorMessages().appendFirst()
     })
   }
 
@@ -73,7 +72,7 @@ class FormValidation extends BaseComponent {
     })
   }
 
-  autoValidate() {
+  validate() {
     if (this._element.checkValidity()) {
       this.clear()
       return
@@ -82,7 +81,7 @@ class FormValidation extends BaseComponent {
     this.getFields().forEach(field => {
       const element = field.getElement()
       if (element.checkValidity()) {
-        field.appendFirstSuccessMsg()
+        field.successMessages().appendFirst()
         return
       }
 
@@ -90,7 +89,7 @@ class FormValidation extends BaseComponent {
         field.errorMessages().add(element.validationMessage)
       }
 
-      field.appendFirstErrorMsg()
+      field.errorMessages().appendFirst()
     })
 
     this._element.classList.add(CLASS_VALIDATED)
@@ -115,7 +114,7 @@ class FormValidation extends BaseComponent {
 
   _initializeFields() {
     const arrayFields = new Map()
-    this._formElements.forEach(element => {
+    Array.from(this._element.elements).forEach(element => {
       let { id } = element
       if (!id) {
         id = getUID(NAME)
@@ -134,13 +133,13 @@ class FormValidation extends BaseComponent {
 
 EventHandler.on(document, EVENT_SUBMIT, SELECTOR_DATA_TOGGLE, event => {
   const { target } = event
-  const data = FormValidation.getInstance(target) || new FormValidation(target)
+  const data = FormValidation.getOrCreateInstance(target)
   if (!target.checkValidity()) {
     event.preventDefault()
     event.stopPropagation()
   }
 
-  data.autoValidate()
+  data.validate()
 })
 
 EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
